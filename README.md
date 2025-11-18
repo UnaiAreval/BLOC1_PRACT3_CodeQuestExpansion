@@ -5,6 +5,9 @@ You give a name to your wizard and he recives a starting level and a wizard titl
 
 The first leter of the name must be UPPER and the rest lower.
 ## 2. Increase LVL 
+The wizard can fight against monsters to earn level. If the wizard lose the fight then lose the same amount of level that he would earn. Wizard HP equals to his level and his strength equals to a dice roll output * 2.
+
+Monsters have a 10% posiviliti of doing a critical hit, which dose the double of damage.
 ## 3. Loot the mine
 ## 4. Show inventory
 ## 5. Buy items 

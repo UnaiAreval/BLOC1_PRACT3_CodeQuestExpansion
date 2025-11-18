@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Drawing;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.Intrinsics.X86;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -11,10 +13,13 @@ namespace CodeQuest
     {
         public static void Main()
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+
             //==============GENERAL==============
             Random random = new Random();
             const string LowerLeters = "abcçdefghijklmnñopqrstuvwxyz";
             const string UpperLeters = "ABCÇDEFGHIJKLMNÑOPQRSTUVWXYZ";
+            const string ThereMustExistWizard = "You can't do that until you introduce a wizard";
 
 
             //==============STARTING·MENU·AND·SCREEN==============
@@ -54,6 +59,7 @@ namespace CodeQuest
 
 
             //==============WIZARD·TRAIN·SCREEN==============
+            const string WizardAlreadyExist = "You already have a wizard, so...";
             const string AskWizardName = """
                 What is your wizard name?
                     -> 
@@ -83,11 +89,141 @@ namespace CodeQuest
                 "Uau! Pots invocar dracs sense cremar el laboratori!",
                 "Has assolit el rang de Mestre dels Arcans!"
             };
+
+
+
+            //==============WIZARD·TRAIN·SCREEN==============
+            const string BattlePresentation = "A wild {0} appears! Rolling dice to determine the outcome of the battle";
+            const string HealthPoints = """
+
+                {0} Health:
+                   ________________________
+                  /                       /
+                 /           {1}          /
+                /_______________________/
+                
+                """;
+            const string RollTheDice = "Press any key to role the dice";
+            const string DiceRoll = """
+
+                You roled the dice and it shous the number {0}
+                {1}
+
+                The monster take {2} damage
+                """;
+            const string MonsterAttack = "The monster answer with a {0} damage attack!";
+            const string CriticalAttack = "A critical hit!!!";
+            const string MonsterDefeeted = "Congrats! You killed the monster! You earn {0} Lvl. points";
+            const string MonsterWins = "OH NO! The monster defeeted you!!! You lose {0} Lvl. points";
+            string[] monsterNames =
+            {
+                "Wandering Skeleton 💀",
+                "Forest Goblin 👹",
+                "Green Slime 🟢",
+                "Ember Wolf 🐺",
+                "Giant Spider 🕷️",
+                "Iron Golem 🤖",
+                "Lost Necromancer 🧝‍♂️",
+                "Ancient Dragon 🐉"
+            };
+            string[] diceFaces = {
+                """
+                  ________
+                 /       /|
+                /_______/ |
+                |       | |
+                |   O   | /
+                |       |/
+                '-------'
+                """,
+                """
+                  ________
+                 /       /|
+                /_______/ |
+                |     O | |
+                |       | /
+                | O     |/
+                '-------'
+                """,
+                """
+                  ________
+                 /       /|
+                /_______/ |
+                |     O | |
+                |   O   | /
+                | O     |/
+                '-------'
+                """,
+                """
+                  ________
+                 /       /|
+                /_______/ |
+                | O   O | |
+                |       | /
+                | O   O |/
+                '-------'
+                """,
+                """
+                  ________
+                 /       /|
+                /_______/ |
+                | O   O | |
+                |   O   | /
+                | O   O |/
+                '-------'
+                """,
+                """
+                  ________
+                 /       /|
+                /_______/ |
+                | O   O | |
+                | O   O | /
+                | O   O |/
+                '-------'
+                """,
+            };
+            int[] monsterHP = //each HP has the same position in this array than the corresponding monster in the monsterNames array
+            {
+                3,
+                5,
+                10,
+                11,
+                18,
+                15,
+                20,
+                50
+            };
+            int[] monsterStrength = //each Strength has the same position in this array than the corresponding monster in the monsterNames array
+            {
+                1,
+                2,
+                5,
+                5,
+                9,
+                7,
+                10,
+                25
+            };
+            int[] monsterLevelInteraction = //each Level Increse has the same position in this array than the corresponding monster in the monsterNames array, it's used to increse or reduse wizards level dipending if  he defeets or not a monster
+            {
+                1,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3
+            };
+
+
+
             string wizardName = "";
             string wizardTitle = "";
             string titleMsg = "";
             int optionChosen; //used to chose an option in the menus
             int wizardLevel = 1;
+            int wizardLive;
             bool continueWithGame = true;//if the user chose the option to exit it changes to false and the game ends
             bool existingWizard = false;//if the wizard does not have name you can't run any option apart from the training, where the user enter the wizard name and then it become true
 
@@ -102,10 +238,6 @@ namespace CodeQuest
                     {
                         Console.ForegroundColor = ConsoleColor.Magenta;
                         Console.WriteLine(WizardWellcome, wizardName, wizardLevel, wizardTitle);
-                    }
-                    else
-                    {
-                        Console.WriteLine();
                     }
 
                     Console.ForegroundColor = ConsoleColor.Green;
@@ -137,70 +269,155 @@ namespace CodeQuest
                             break;
 
                         case 1:
-                            Console.Write(AskWizardName);
-                            Console.ForegroundColor = ConsoleColor.Gray;
-                            wizardName = Console.ReadLine();
+                            if (!existingWizard)
+                            {
+                                Console.Write(AskWizardName);
+                                Console.ForegroundColor = ConsoleColor.Gray;
+                                wizardName = Console.ReadLine();
 
 
-                            string wnCorrector = "";//Used to correct the wizard name (The first leter must be Upper and the rest Lower)
-                            for (int i = 0; i < LowerLeters.Length && LowerLeters.Contains(wizardName[0]); i++)//LowerLeters and UpperLeters have the same length
-                            {
-                                if (wizardName[0] == LowerLeters[i]) wnCorrector += UpperLeters[i];
-                            }
-                            for (int i = 1; i < wizardName.Length; i++)
-                            {
-                                if (UpperLeters.Contains(wizardName[i]))
+                                string wnCorrector = "";//Used to correct the wizard name (The first leter must be Upper and the rest Lower)
+                                if (LowerLeters.Contains(wizardName[0]))
                                 {
-                                    for (int j = 0; j < UpperLeters.Length; j++)//LowerLeters and UpperLeters have the same length
+                                    int leterRuner = 0;
+                                    while (LowerLeters.Contains(wizardName[0]) && leterRuner < LowerLeters.Length)//LowerLeters and UpperLeters have the same length
                                     {
-                                        if (UpperLeters[j] == wizardName[i]) wnCorrector += LowerLeters[j];
+                                        if (wizardName[0] == LowerLeters[leterRuner]) wnCorrector += UpperLeters[leterRuner];
+                                        leterRuner++;
                                     }
                                 }
                                 else
                                 {
-                                    wnCorrector += wizardName[i];
+                                    wnCorrector += wizardName[0];
                                 }
-                            }
-                            wizardName = wnCorrector;
-                            existingWizard = true;
+                                    
+                                for (int i = 1; i < wizardName.Length; i++)
+                                {
+                                    if (UpperLeters.Contains(wizardName[i]))
+                                    {
+                                        for (int j = 0; j < UpperLeters.Length; j++)//LowerLeters and UpperLeters have the same length
+                                        {
+                                            if (UpperLeters[j] == wizardName[i]) wnCorrector += LowerLeters[j];
+                                        }
+                                    }
+                                    else
+                                    {
+                                        wnCorrector += wizardName[i];
+                                    }
+                                }
+                                wizardName = wnCorrector;
+                                existingWizard = true;
 
-                            Console.ForegroundColor = ConsoleColor.Yellow;
-                            for (int i = 0; i < DaysTraining; i++)
-                            {
-                                Thread.Sleep(1000);
-                                int lvlIncrase = random.Next(1, MaxLevelXDey);
-                                int hTrained = random.Next(1, MaxHouersTraining);
-                                Console.WriteLine(DayOfTrainingInfo, i + 1, hTrained, lvlIncrase);
-                                wizardLevel += lvlIncrase;
-                            }
-                            
-                            if (wizardLevel < 20) {
-                                wizardTitle = wizardTitles[0];
-                                titleMsg = titleMessages[0];
-                            } else if (20 <= wizardLevel && wizardLevel <= 29) {
-                                wizardTitle = wizardTitles[1];
-                                titleMsg = titleMessages[1];
-                            } else if (30 <= wizardLevel && wizardLevel <= 34) {
-                                wizardTitle = wizardTitles[2];
-                                titleMsg = titleMessages[2];
-                            } else if (35 <= wizardLevel && wizardLevel <= 39) {
-                                wizardTitle = wizardTitles[3];
-                                titleMsg = titleMessages[3];
-                            } else {
-                                wizardTitle = wizardTitles[4];
-                                titleMsg = titleMessages[4];
-                            }
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+                                for (int i = 0; i < DaysTraining; i++)
+                                {
+                                    Thread.Sleep(1000);
+                                    int lvlIncrase = random.Next(1, MaxLevelXDey);
+                                    int hTrained = random.Next(1, MaxHouersTraining);
+                                    Console.WriteLine(DayOfTrainingInfo, i + 1, hTrained, lvlIncrase);
+                                    wizardLevel += lvlIncrase;
+                                }
+
+                                if (wizardLevel < 20)
+                                {
+                                    wizardTitle = wizardTitles[0];
+                                    titleMsg = titleMessages[0];
+                                }
+                                else if (20 <= wizardLevel && wizardLevel <= 29)
+                                {
+                                    wizardTitle = wizardTitles[1];
+                                    titleMsg = titleMessages[1];
+                                }
+                                else if (30 <= wizardLevel && wizardLevel <= 34)
+                                {
+                                    wizardTitle = wizardTitles[2];
+                                    titleMsg = titleMessages[2];
+                                }
+                                else if (35 <= wizardLevel && wizardLevel <= 39)
+                                {
+                                    wizardTitle = wizardTitles[3];
+                                    titleMsg = titleMessages[3];
+                                }
+                                else
+                                {
+                                    wizardTitle = wizardTitles[4];
+                                    titleMsg = titleMessages[4];
+                                }
 
                                 Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine(TrainingEnd, DaysTraining, wizardName, wizardTitle, titleMsg);
-
+                                Console.WriteLine(TrainingEnd, DaysTraining, wizardName, wizardTitle, titleMsg);
+                            }
+                            else
+                            {
+                                Console.WriteLine(WizardAlreadyExist);
+                            }
                             Console.ForegroundColor = ConsoleColor.Yellow;
                             Console.WriteLine(PressToContinue);
                             Console.ReadKey();
                             break;
 
                         case 2:
-                            break;
+                            if (existingWizard) {
+                                wizardLive = wizardLevel;
+
+                                int mNum = random.Next(0, monsterNames.GetLength(0));
+                                string mName = monsterNames[mNum];
+                                int mHP = monsterHP[mNum];
+                                int mS = monsterStrength[mNum];
+                                int mLI = monsterLevelInteraction[mNum];
+                                Console.WriteLine(BattlePresentation, mName);
+
+                                do
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Magenta;
+                                    Console.WriteLine(HealthPoints, wizardName, wizardLive);
+
+                                    Console.ForegroundColor = ConsoleColor.Yellow;
+                                    Console.WriteLine(HealthPoints, mName, mHP);
+                                    Console.WriteLine(RollTheDice);
+                                    Console.ReadKey(false);
+                                    int diceNumber = random.Next(0, 6);
+                                    Console.WriteLine(DiceRoll, diceNumber + 1, diceFaces[diceNumber], (diceNumber + 1) * 2);
+                                    mHP = mHP - ((diceNumber + 1) * 2);
+
+                                    if (mHP > 0)
+                                    {
+                                        diceNumber = random.Next(0, 101); // the monster have a 10% chance of a critical hit, but only if his strength is bigger than 2
+                                        if (diceNumber < 10 && mS > 2)
+                                        {
+                                            Console.WriteLine(MonsterAttack, mS);
+                                            Console.ForegroundColor = ConsoleColor.Red;
+                                            Console.WriteLine(CriticalAttack);
+                                            wizardLive -= mS;
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine(MonsterAttack, mS / 2);
+                                            wizardLive = wizardLive - (mS / 2);
+                                        }
+                                    }
+                                    Thread.Sleep(1000);
+                                } while (mHP > 0 && wizardLive > 0);
+
+                                if (wizardLive != 0)
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Cyan;
+                                    Console.WriteLine(MonsterDefeeted, mLI);
+                                    wizardLevel += mLI;
+
+                                }
+                                else
+                                {
+                                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                                    Console.WriteLine(MonsterWins, mLI);
+                                    wizardLevel -= mLI;
+                                }
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+                                Console.WriteLine(PressToContinue);
+                                Console.ReadKey();
+
+                            }
+                                break;
 
                         case 3:
                             break;
@@ -221,11 +438,18 @@ namespace CodeQuest
                             break;
 
                         default:
-                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.ForegroundColor = ConsoleColor.DarkGreen;
                             Console.WriteLine(OptionNoRecognised);
                             Console.WriteLine(PressToContinue);
                             Console.ReadKey();
                             break;
+                    }
+                    if (!existingWizard && optionChosen != 0)
+                    {
+                        Console.WriteLine(ThereMustExistWizard);
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine(PressToContinue);
+                        Console.ReadKey();
                     }
                 } 
                 catch
