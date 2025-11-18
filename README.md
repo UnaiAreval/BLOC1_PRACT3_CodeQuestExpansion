@@ -9,6 +9,7 @@ The wizard can fight against monsters to earn level. If the wizard lose the figh
 
 Monsters have a 10% posiviliti of doing a critical hit, which dose the double of damage.
 ## 3. Loot the mine
+Let the wizard do some excavations in a mine, where he have the chance to earn bits (money).
 ## 4. Show inventory
 ## 5. Buy items 
 ## 6. Show attacks by LVL 
