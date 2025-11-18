@@ -29,6 +29,7 @@ namespace CodeQuest
                 the {2}
 
                 """;//0 -> wizardName : 1 -> wizardLevel : 2 -> wizardTitle
+            const string WizardBits = "You have {0} Bits";
             const string MenuItem = "   [{0}] - {1}";
             const string PressToContinue = "Press any key to continue...";
             const string ChoseOption = """
@@ -216,6 +217,43 @@ namespace CodeQuest
                 3
             };
 
+            
+
+            //==============LOOT·THE·MINE==============
+            const string MineEnter = """
+                You have {0} chances to excavate in the mine:
+
+                /\/\/\/\/\/\/\/\/\/\|·|/\/\/\/\/\/\/\/\/\/\
+                |               0                         |
+                |               ^                         |
+                |               |       ➖ = NoExcavated  |
+                | 0 <- X ->     Y       ❌ = EmptyHole    |
+                |               |       🪙 = BitsHole     |
+                |               V                         |
+                \_________________________________________/
+
+                """;
+            const string YcordsAsk = """
+                Enter the Y cords to excavate.
+                    -> 
+                """; 
+            const string XcordsAsk = """
+                Enter the X cords to excavate.
+                    -> 
+                """;
+            const string ExcavationMsg = "You excavated in X = {0} : Y = {1}";
+            const string BitsHole = "You found {0} Bits";
+            const string EmptyHole = "This cords are empty";
+            const string AlreadyExcavated = "You already excavated there, you can't find nothing";
+            const int MinBitsFound = 5;
+            const int MaxBitsFound = 51;//used to generate the amount of bits found
+            const int BitsProv = 30; // % of provavilitis that a hole have bits
+            const int LengthX = 5;
+            const int LengthY = 5;
+            const int ShovelUses = 5; //the amount of trys you have to excavate
+            bool[,] bitsMap = new bool[LengthY, LengthX]; ; // false => no bits : true => bits
+            bool[,] excavatedMap = new bool[LengthY, LengthX]; ; //false => you can excavate there : true => you already excavated there
+
 
 
             string wizardName = "";
@@ -224,8 +262,13 @@ namespace CodeQuest
             int optionChosen; //used to chose an option in the menus
             int wizardLevel = 1;
             int wizardLive;
+            int bits = 0; //bits are the game coin
+            int yCords;
+            int xCords;
             bool continueWithGame = true;//if the user chose the option to exit it changes to false and the game ends
             bool existingWizard = false;//if the wizard does not have name you can't run any option apart from the training, where the user enter the wizard name and then it become true
+
+
 
             do
             {
@@ -238,6 +281,8 @@ namespace CodeQuest
                     {
                         Console.ForegroundColor = ConsoleColor.Magenta;
                         Console.WriteLine(WizardWellcome, wizardName, wizardLevel, wizardTitle);
+                        Console.ForegroundColor = ConsoleColor.DarkYellow;
+                        Console.WriteLine(WizardBits, bits);
                     }
 
                     Console.ForegroundColor = ConsoleColor.Green;
@@ -420,6 +465,83 @@ namespace CodeQuest
                                 break;
 
                         case 3:
+                            if (existingWizard)
+                            {
+                                //MAP·GENERATOR
+                                for (int i = 0; i < bitsMap.GetLength(0); i++)
+                                {
+                                    for (int j = 0; j < bitsMap.GetLength(1); j++)
+                                    {
+                                        int thereAreCoins = random.Next(0, 100);
+                                        if (thereAreCoins <= BitsProv) bitsMap[i, j] = true;
+                                        else bitsMap[i, j] = false;
+                                    }
+                                }
+                                for (int i = 0; i < excavatedMap.GetLength(0); i++)
+                                {
+                                    for (int j = 0; j < excavatedMap.GetLength(1); j++)
+                                    {
+                                        excavatedMap[i, j] = false;
+                                    }
+                                }
+
+                                //EXCAVATIONS
+                                for (int i = 0; i < ShovelUses; i++)
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    Console.Clear();
+                                    Console.WriteLine(MineEnter, ShovelUses - i);
+                                    //MAP·PRINTER
+                                    for (int j = 0; j < excavatedMap.GetLength(0); j++)
+                                    {
+                                        for (int k = 0; k < excavatedMap.GetLength(1); k++)
+                                        {
+                                            if (!excavatedMap[j, k]) Console.Write("➖");
+                                            else if (bitsMap[j, k]) Console.Write("🪙");
+                                            else Console.Write("❌");
+                                        }
+                                        Console.WriteLine();
+                                    }
+
+                                    //Excavation
+                                    do
+                                    {
+                                        Console.ForegroundColor = ConsoleColor.Green;
+                                        Console.Write(YcordsAsk);
+                                        Console.ForegroundColor = ConsoleColor.Gray;
+                                    } while (false == Int32.TryParse(Console.ReadLine(), out yCords));
+                                    do
+                                    {
+                                        Console.ForegroundColor = ConsoleColor.Green;
+                                        Console.Write(XcordsAsk);
+                                        Console.ForegroundColor = ConsoleColor.Gray;
+                                    } while (false == Int32.TryParse(Console.ReadLine(), out xCords));
+
+                                    Console.ForegroundColor = ConsoleColor.Yellow;
+                                    if (!excavatedMap[yCords, xCords])
+                                    {
+                                        excavatedMap[yCords, xCords] = true;
+                                        if (bitsMap[yCords, xCords])
+                                        {
+                                            int b = random.Next(MinBitsFound, MaxBitsFound); //bits found
+                                            bits = bits + b;
+                                            Console.ForegroundColor = ConsoleColor.Cyan;
+                                            Console.WriteLine(BitsHole, b);
+                                        }
+                                        else Console.WriteLine(EmptyHole);
+                                    }
+                                    else Console.WriteLine(AlreadyExcavated);
+                                    Console.ForegroundColor = ConsoleColor.Yellow;
+                                    Console.WriteLine(PressToContinue);
+                                    Console.ReadKey();
+                                }
+                                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                                Console.WriteLine(WizardBits, bits);
+
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+                                Console.WriteLine(PressToContinue);
+                                Console.ReadKey();
+                            }
                             break;
 
                         case 4:
