@@ -11,6 +11,7 @@ Monsters have a 10% posiviliti of doing a critical hit, which dose the double of
 ## 3. Loot the mine
 Let the wizard do some excavations in a mine, where he have the chance to earn bits (money).
 ## 4. Show inventory
+Show to the user the wizard inventory and let him see the selected item description
 ## 5. Buy items 
 ## 6. Show attacks by LVL 
 ## 7. Decode ancient Scroll
