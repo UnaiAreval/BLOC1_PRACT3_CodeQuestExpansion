@@ -297,6 +297,7 @@ namespace CodeQuest
 
                  -> 
                 """;//used in the shop
+            const string ItemPurchased = "You puchased {0} : {1} Bits";
             const string ItemDescriptionWriter = """
                 {0}:
                       << {1} >>
@@ -366,7 +367,6 @@ namespace CodeQuest
 
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.Clear();
-
                 try
                 {
                     switch (optionChosen)
@@ -574,13 +574,13 @@ namespace CodeQuest
                                         Console.ForegroundColor = ConsoleColor.Green;
                                         Console.Write(YcordsAsk);
                                         Console.ForegroundColor = ConsoleColor.Gray;
-                                    } while (false == Int32.TryParse(Console.ReadLine(), out yCords));
+                                    } while (false == Int32.TryParse(Console.ReadLine(), out yCords) || yCords > excavatedMap.GetLength(0));
                                     do
                                     {
                                         Console.ForegroundColor = ConsoleColor.Green;
                                         Console.Write(XcordsAsk);
                                         Console.ForegroundColor = ConsoleColor.Gray;
-                                    } while (false == Int32.TryParse(Console.ReadLine(), out xCords));
+                                    } while (false == Int32.TryParse(Console.ReadLine(), out xCords) || xCords > excavatedMap.GetLength(1));
 
                                     Console.ForegroundColor = ConsoleColor.Yellow;
                                     if (!excavatedMap[yCords, xCords])
@@ -610,44 +610,107 @@ namespace CodeQuest
                             break;
 
                         case 4:
-                            do
+                            if (existingWizard)
                             {
-                                leaveShopOrInventory = false;
                                 do
                                 {
-                                    Console.Clear();
-                                    Console.ForegroundColor = ConsoleColor.Green;
-                                    Console.WriteLine(InventoryTitle, wizardName);
-                                    for (int i = 0; i < itemAmountInPropiety.GetLength(0); i++)
+                                    leaveShopOrInventory = false;
+                                    do
                                     {
-                                        if (itemAmountInPropiety[i] > 0)
+                                        Console.Clear();
+                                        Console.ForegroundColor = ConsoleColor.Green;
+                                        Console.WriteLine(InventoryTitle, wizardName);
+                                        for (int i = 0; i < itemAmountInPropiety.GetLength(0); i++)
                                         {
-                                            Console.WriteLine(ItemWriter, i + 1, items[i], itemAmountInPropiety[i]);
+                                            if (itemAmountInPropiety[i] > 0)
+                                            {
+                                                Console.WriteLine(ItemWriter, i + 1, items[i], itemAmountInPropiety[i]);
+                                            }
                                         }
+                                        Console.Write(ShowItemDescription);
+                                    } while (false == Int32.TryParse(Console.ReadLine(), out optionChosen));
+                                    if (optionChosen > 0 && optionChosen - 1 < itemAmountInPropiety.GetLength(0) && itemAmountInPropiety[optionChosen - 1] > 0)
+                                    {
+                                        Console.WriteLine(ItemDescriptionWriter, items[optionChosen - 1], itemDescription[optionChosen - 1]);
                                     }
-                                    Console.Write(ShowItemDescription);
-                                } while (false == Int32.TryParse(Console.ReadLine(), out optionChosen));
-                                if (optionChosen > 0 && itemAmountInPropiety[optionChosen - 1] > 0)
-                                {
-                                    Console.WriteLine(ItemDescriptionWriter, items[optionChosen - 1], itemDescription[optionChosen - 1]);
-                                }
-                                else if (optionChosen == 0)
-                                {
-                                    leaveShopOrInventory = true;
-                                }
-                                else
-                                {
+                                    else if (optionChosen == 0)
+                                    {
+                                        leaveShopOrInventory = true;
+                                    }
+                                    else
+                                    {
+                                        Console.ForegroundColor = ConsoleColor.Yellow;
+                                        Console.WriteLine(OptionNoRecognised);
+                                    }
                                     Console.ForegroundColor = ConsoleColor.Yellow;
-                                    Console.WriteLine(OptionNoRecognised);
-                                }
-                                Console.ForegroundColor = ConsoleColor.Yellow;
-                                Console.WriteLine(PressToContinue);
-                                Console.ReadKey();
-                            } while (!leaveShopOrInventory);
-                            
+                                    Console.WriteLine(PressToContinue);
+                                    Console.ReadKey();
+                                } while (!leaveShopOrInventory);
+                            }
                             break;
 
                         case 5:
+                            if (existingWizard)
+                            {
+                                do
+                                {
+                                    leaveShopOrInventory = false;
+                                    do
+                                    {
+                                        Console.Clear();
+                                        Console.ForegroundColor = ConsoleColor.DarkYellow;
+                                        Console.WriteLine(WizardBits, bits);
+                                        Console.ForegroundColor = ConsoleColor.Green;
+                                        Console.WriteLine(ShopTitle);
+                                        for (int i = 0; i < items.GetLength(0); i++)
+                                        {
+                                            if ((itemAmountInPropiety[i] < maxItemAmountInPropiety[i] || maxItemAmountInPropiety[i] == 0) && wizardLevel >= minLevelToBuy[i])
+                                            {
+                                                Console.WriteLine(ItemWriter, i + 1, items[i], itemPrice[i] + " Bits.");
+                                            }
+                                        }
+                                        Console.Write(ChoseOption);
+                                        Console.ForegroundColor = ConsoleColor.Gray;
+                                    } while (false == Int32.TryParse(Console.ReadLine(), out optionChosen));
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    if (optionChosen > 0 && optionChosen - 1 < itemAmountInPropiety.GetLength(0))
+                                    {
+                                        int subMenuOptionSelector;
+                                        Console.Write(ItemOptions);
+                                        Console.ForegroundColor = ConsoleColor.Gray;
+                                        if (Int32.TryParse(Console.ReadLine(), out subMenuOptionSelector) && subMenuOptionSelector == 1 && itemAmountInPropiety[optionChosen - 1] < maxItemAmountInPropiety[optionChosen - 1])
+                                        {
+                                            Console.ForegroundColor = ConsoleColor.Green;
+                                            itemAmountInPropiety[optionChosen - 1]++;
+                                            bits -= itemPrice[optionChosen - 1];
+                                            Console.WriteLine(ItemPurchased, items[optionChosen - 1], itemPrice[optionChosen - 1]);
+                                        }
+                                        else if (subMenuOptionSelector == 0)
+                                        {
+                                            Console.ForegroundColor = ConsoleColor.Green;
+                                            Console.WriteLine(ItemDescriptionWriter, items[optionChosen - 1], itemDescription[optionChosen - 1]);
+                                        }
+                                        else
+                                        {
+
+                                            Console.ForegroundColor = ConsoleColor.Yellow;
+                                            Console.WriteLine(OptionNoRecognised);
+                                        }
+                                    }
+                                    else if (optionChosen == 0)
+                                    {
+                                        leaveShopOrInventory = true;
+                                    }
+                                    else
+                                    {
+                                        Console.ForegroundColor = ConsoleColor.Yellow;
+                                        Console.WriteLine(OptionNoRecognised);
+                                    }
+                                    Console.ForegroundColor = ConsoleColor.Yellow;
+                                    Console.WriteLine(PressToContinue);
+                                    Console.ReadKey();
+                                } while (!leaveShopOrInventory);
+                            }
                             break;
 
                         case 6:
