@@ -13,5 +13,8 @@ Let the wizard do some excavations in a mine, where he have the chance to earn b
 ## 4. Show inventory
 Show to the user the wizard inventory and let him see the selected item description
 ## 5. Buy items 
+It lets the user buy some items if he have the requested level, less of the max. amount of that object in his inventory and more money than the item price.
+
+Also he can see the item description in the shop.
 ## 6. Show attacks by LVL 
 ## 7. Decode ancient Scroll
