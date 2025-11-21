@@ -314,7 +314,26 @@ namespace CodeQuest
             int[] minLevelToBuy = { 30, 10, 50, 40, 20 };
             int[] itemPrice = { 100, 20, 200, 120, 75 };
             int[] maxItemAmountInPropiety = { 1, 5, 0, 1, 1};//0 mean that it don't have an amount limitation
-            
+
+
+
+            //==============INVENTORY·AND·SHOP==============
+            const string WizardAttacksListTitle = """
+                <================= WIZARD INFORMATION =================>
+                Name: {0}       Level: {1}
+
+                Attacks:
+                """;
+            const string AttackWriter = "   - {0}";
+            string[][] wizardAttacks = {
+                new string[] {  "Magic Spark 💫" }, // level <= 15
+                new string[] { "Fireball 🔥", "Ice Ray 🥏", "Arcane Shield ⚕️" }, // 15 < level <= 30
+                new string[] { "Meteor ☄️", "Pure Energy Explosion 💥", "Minor Charm 🎭", "Air Strike 🍃" }, // 30 < level <= 45
+                new string[] { "Wave of Light ⚜️", "Storm of Wings 🐦" }, // 45 < level <= 60
+                new string[] { "Cataclysm 🌋", "Portal of Chaos 🌀", "Arcane Blood Pact 🩸", "Elemental Storm ⛈️" }  // 60 < level
+            };
+            int[] levelToUnlockAttack = { 0, 16, 31, 45, 60 };
+
 
 
             string wizardName = "";
@@ -714,6 +733,27 @@ namespace CodeQuest
                             break;
 
                         case 6:
+                            if (existingWizard)
+                            {
+                                Console.BackgroundColor = ConsoleColor.White;
+                                Console.Clear();
+                                Console.WriteLine(WizardAttacksListTitle, wizardName, wizardLevel);
+                                for (int i = 0; i < wizardAttacks.GetLength(0); i++)
+                                {
+                                    if (levelToUnlockAttack[i] <= wizardLevel)
+                                    {
+                                        foreach (string attack in wizardAttacks[i])
+                                        {
+                                            Console.WriteLine(AttackWriter, attack);
+                                        }
+                                    }
+                                }
+                                Console.ForegroundColor = ConsoleColor.Black;
+                                Console.WriteLine(PressToContinue);
+                                Console.ReadKey();
+                                Console.BackgroundColor = ConsoleColor.Black;
+                                Console.Clear();
+                            }
                             break;
 
                         case 7:
@@ -739,7 +779,7 @@ namespace CodeQuest
                 } 
                 catch
                 {
-
+                    Console.WriteLine($"Error in option {optionChosen}");
                 }
 
             } while (continueWithGame);

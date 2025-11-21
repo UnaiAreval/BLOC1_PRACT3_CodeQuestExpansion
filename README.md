@@ -17,4 +17,7 @@ It lets the user buy some items if he have the requested level, less of the max.
 
 Also he can see the item description in the shop.
 ## 6. Show attacks by LVL 
+Show a list of attacks that the wizard have depending on his level. For example:
+ - if wizard have a Level <= 15 then he only can see "Magic Spark".
+ - if wizard increase his level to <= 30 he can see the attacks that he already have and also the new ones from his new level. 
 ## 7. Decode ancient Scroll
