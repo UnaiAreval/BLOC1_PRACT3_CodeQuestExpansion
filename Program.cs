@@ -256,6 +256,66 @@ namespace CodeQuest
 
 
 
+            //==============INVENTORY·AND·SHOP==============
+            const string InventoryTitle = """
+                _______________________________________________________
+                \====================< {0} Items >====================/
+                 \__
+                    |
+                   [0] - Leave Inventory
+                    |
+                """;
+            const string ShopTitle = """
+                   
+                  (____________________________________________)
+                   /                   ____                   \
+                  /                   /    \                   \
+                 /                   / SHOP \                   \
+                /====================\  \/  /====================\
+                 |                    \____/                    |
+                  \                                             |
+                   \                                            |
+                    |
+                   [0] - Leave without buying
+                    |
+                    |
+                """;
+            const string ItemWriter = """
+                   [{0}] - {1}        {2}
+                    |
+                """;//the 2 is used for the amount of this object you have in your inventory or for the object price if it's in the shop
+            const string ShowItemDescription = """
+
+                Selecto the item to show its description [Item identifier] or leave [0]:
+                
+                    -> 
+                """;//used to ask for the item which you want to know the description in the inventory
+            const string ItemOptions = """
+                What do you want from this:
+                    [0] - Tell me about how it works
+                    [1] - Buy it $
+
+                 -> 
+                """;//used in the shop
+            const string ItemDescriptionWriter = """
+                {0}:
+                      << {1} >>
+                """;
+            string[] items = { "Iron Dagger 🗡️", "Healing Potion ⚗️", "Ancient Key 🗝️", "Crossbow 🏹", "Metal Shield 🛡️" };
+            string[] itemDescription = { 
+                "In combat, it gives you a 5% chance of making a critical attack",
+                "In combat, it regenerates your live 10 Hp, but you consume 1 each time you use it",
+                "Let you open some closed dors in dangeons. It's consumed after using it",
+                "In combat, it lets you attack the first turn from distence, doing half the damage. Enemy can't attack you in this first turn if he don't have a distance weapon",
+                "In combat, you have a chance of the 10% of don't recive damage from an enemy attack"
+            };
+            int[] itemAmountInPropiety = new int[items.GetLength(0)];
+            int[] minLevelToBuy = { 30, 10, 50, 40, 20 };
+            int[] itemPrice = { 100, 20, 200, 120, 75 };
+            int[] maxItemAmountInPropiety = { 1, 5, 0, 1, 1};//0 mean that it don't have an amount limitation
+            
+
+
             string wizardName = "";
             string wizardTitle = "";
             string titleMsg = "";
@@ -267,9 +327,14 @@ namespace CodeQuest
             int xCords;
             bool continueWithGame = true;//if the user chose the option to exit it changes to false and the game ends
             bool existingWizard = false;//if the wizard does not have name you can't run any option apart from the training, where the user enter the wizard name and then it become true
+            bool leaveShopOrInventory;
 
 
 
+            for (int i = 0;  i < itemAmountInPropiety.GetLength(0); i++)
+            {
+                itemAmountInPropiety[i] = 0;
+            }
             do
             {
                 
@@ -545,6 +610,41 @@ namespace CodeQuest
                             break;
 
                         case 4:
+                            do
+                            {
+                                leaveShopOrInventory = false;
+                                do
+                                {
+                                    Console.Clear();
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    Console.WriteLine(InventoryTitle, wizardName);
+                                    for (int i = 0; i < itemAmountInPropiety.GetLength(0); i++)
+                                    {
+                                        if (itemAmountInPropiety[i] > 0)
+                                        {
+                                            Console.WriteLine(ItemWriter, i + 1, items[i], itemAmountInPropiety[i]);
+                                        }
+                                    }
+                                    Console.Write(ShowItemDescription);
+                                } while (false == Int32.TryParse(Console.ReadLine(), out optionChosen));
+                                if (optionChosen > 0 && itemAmountInPropiety[optionChosen - 1] > 0)
+                                {
+                                    Console.WriteLine(ItemDescriptionWriter, items[optionChosen - 1], itemDescription[optionChosen - 1]);
+                                }
+                                else if (optionChosen == 0)
+                                {
+                                    leaveShopOrInventory = true;
+                                }
+                                else
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Yellow;
+                                    Console.WriteLine(OptionNoRecognised);
+                                }
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+                                Console.WriteLine(PressToContinue);
+                                Console.ReadKey();
+                            } while (!leaveShopOrInventory);
+                            
                             break;
 
                         case 5:
