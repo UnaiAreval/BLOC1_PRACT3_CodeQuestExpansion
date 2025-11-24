@@ -5,6 +5,7 @@ using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.Intrinsics.X86;
+using System.Security.Cryptography.X509Certificates;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CodeQuest
@@ -19,6 +20,8 @@ namespace CodeQuest
             Random random = new Random();
             const string LowerLeters = "abcçdefghijklmnñopqrstuvwxyz";
             const string UpperLeters = "ABCÇDEFGHIJKLMNÑOPQRSTUVWXYZ";
+            const string NonValidChars = " _-%$@&/()=?¿!";
+            const string Vowels = "AEIOUaeiou";
             const string ThereMustExistWizard = "You can't do that until you introduce a wizard";
 
 
@@ -65,7 +68,7 @@ namespace CodeQuest
                 What is your wizard name?
                     -> 
                 """;
-            const string DayOfTrainingInfo = "Day: {0} Houers trained: {1} Level earned: {2}";
+            const string DayOfTrainingInfo = "Day: {0} Houers trained: {1} Points earned: {2}";
             const string TrainingEnd = """
                 You trained {0} days, {1} the {2}.
                 {3}
@@ -205,16 +208,16 @@ namespace CodeQuest
                 10,
                 25
             };
-            int[] monsterLevelInteraction = //each Level Increse has the same position in this array than the corresponding monster in the monsterNames array, it's used to increse or reduse wizards level dipending if  he defeets or not a monster
+            int[] monsterLevelInteraction = //each points Increse has the same position in this array than the corresponding monster in the monsterNames array, it's used to increse or reduse wizards points dipending if  he defeets or not a monster
             {
                 1,
                 1,
                 1,
-                1,
                 2,
                 2,
-                2,
-                3
+                3,
+                3,
+                4
             };
 
             
@@ -311,16 +314,20 @@ namespace CodeQuest
                 "In combat, you have a chance of the 10% of don't recive damage from an enemy attack"
             };
             int[] itemAmountInPropiety = new int[items.GetLength(0)];
-            int[] minLevelToBuy = { 30, 10, 50, 40, 20 };
+            int[] minLevelToBuy = { 2, 1, 4, 3, 1 };
             int[] itemPrice = { 100, 20, 200, 120, 75 };
             int[] maxItemAmountInPropiety = { 1, 5, 0, 1, 1};//0 mean that it don't have an amount limitation
 
 
 
-            //==============INVENTORY·AND·SHOP==============
+            //==============ATTACKS·BY·LEVEL==============
             const string WizardAttacksListTitle = """
                 <================= WIZARD INFORMATION =================>
-                Name: {0}       Level: {1}
+                Name: {0}       Title: {1}
+
+                Level: {2}      Points: {3}
+
+                Bits: {4}
 
                 Attacks:
                 """;
@@ -332,7 +339,84 @@ namespace CodeQuest
                 new string[] { "Wave of Light ⚜️", "Storm of Wings 🐦" }, // 45 < level <= 60
                 new string[] { "Cataclysm 🌋", "Portal of Chaos 🌀", "Arcane Blood Pact 🩸", "Elemental Storm ⛈️" }  // 60 < level
             };
-            int[] levelToUnlockAttack = { 0, 16, 31, 45, 60 };
+            int[] levelToUnlockAttack = { 1, 2, 3, 4, 5 };
+
+
+            //==============DECODE·ANCIENT·SCROLLS==============
+
+            const string SolvedScrollsTitle = """
+                O============SCROLLS============O
+                 |                             |
+                 |                             |
+                 |     << SOLVED·SCROLLS >>    |
+                 |                             |
+                """;
+            const string ScrollsMenu = """
+                 |                             |
+                 |                             |
+                 |   << SCROLLS·TO·SOLVE >>    |
+                 |                             |
+                """;
+            const string OptionInTheScroll = """
+                 |                              \
+                 |  [{0}] - {1}
+                 |                              /
+                """;//used for any menu option in the scroll
+            const string ChoseScrollToDecode = """
+                 |                             |
+                 |   \ Chose the scroll to /   |
+                 |    \       decode      /    |
+                 |                             |
+                 |  -> 
+                """;
+            const string DecodingMenu = """
+                 |                             |
+                 |                             |
+                 |   << DECODING·OPTIONS >>    |
+                 |                             |
+                """;
+            const string ChoseDecodingOption = """
+                 |                             |
+                 |   \ Chose the decoding /    |
+                 |    \      method      /     |
+                 |                             |
+                 |  -> 
+                """;
+            const string DecodingSucces = """
+                 |                             |
+                 |   The decoding result is    |
+                 |                             |
+                 /                             \
+                '                               '
+                  << {0} >>
+                """;
+            const string DecodingFailed = """
+                 |                             |
+                 |   The decoding went wrong   |___
+                 |     Try an other method     |  /\
+                 \                             \ / /
+                  \_____________________________\_/
+
+
+                """;
+            string[] scrolls =
+            {
+                "H u m a n",
+                "Haro, how are you? Fine, thankyou. O my ga",
+                "Lorem ipsum dolor sIt amet, consectetur adipIsCing elit, sed do eIVsmod tempor inciDIdVnt ut labore et DoLore magna aLIqVa."
+            };
+            string[] decodingOptions =
+            {
+                "Decipher scroll mesage (remove spaces)",
+                "Count magical runes (vowels)",
+                "Extract secret code (numbers)"
+            };
+            string[] solvedScrolls = new string[scrolls.GetLength(0)];
+            bool[] scrollDecoded = { false, false, false };
+            char[] romanNums = { 'I', 'V', 'X', 'L', 'C', 'D' };
+            int[] nums = { 1, 5, 10, 50, 100, 500 };
+
+            string scrollInfo = ""; //used to show the scroll information found if you decoded it propenly
 
 
 
@@ -341,6 +425,7 @@ namespace CodeQuest
             string titleMsg = "";
             int optionChosen; //used to chose an option in the menus
             int wizardLevel = 1;
+            int points = 0;
             int wizardLive;
             int bits = 0; //bits are the game coin
             int yCords;
@@ -400,12 +485,26 @@ namespace CodeQuest
                         case 1:
                             if (!existingWizard)
                             {
-                                Console.Write(AskWizardName);
-                                Console.ForegroundColor = ConsoleColor.Gray;
-                                wizardName = Console.ReadLine();
-
-
                                 string wnCorrector = "";//Used to correct the wizard name (The first leter must be Upper and the rest Lower)
+                                
+                                do
+                                {
+                                    Console.Clear();
+                                    Console.ForegroundColor= ConsoleColor.Green;
+                                    Console.Write(AskWizardName);
+                                    Console.ForegroundColor = ConsoleColor.Gray;
+                                    wizardName = Console.ReadLine();
+                                    while (wizardName != "" && NonValidChars.Contains(wizardName[0]))
+                                    {
+                                        for (int i = 1; i < wizardName.Length; i++)
+                                        {
+                                            wnCorrector += wizardName[i];
+                                        }
+                                        wizardName = wnCorrector;
+                                        wnCorrector = "";
+                                    }
+                                } while (wizardName == "");
+
                                 if (LowerLeters.Contains(wizardName[0]))
                                 {
                                     int leterRuner = 0;
@@ -441,28 +540,35 @@ namespace CodeQuest
                                 for (int i = 0; i < DaysTraining; i++)
                                 {
                                     Thread.Sleep(1000);
-                                    int lvlIncrase = random.Next(1, MaxLevelXDey);
+                                    int pointsEarned = random.Next(1, MaxLevelXDey);
                                     int hTrained = random.Next(1, MaxHouersTraining);
-                                    Console.WriteLine(DayOfTrainingInfo, i + 1, hTrained, lvlIncrase);
-                                    wizardLevel += lvlIncrase;
+                                    Console.WriteLine(DayOfTrainingInfo, i + 1, hTrained, pointsEarned);
+                                    points += pointsEarned;
                                 }
 
-                                if (wizardLevel < 20)
+                                if (points <= 50) wizardLevel = points / 10;
+                                else
+                                {
+                                    wizardLevel = 5;
+                                    points = 50;
+                                }
+
+                                if (points < 20)
                                 {
                                     wizardTitle = wizardTitles[0];
                                     titleMsg = titleMessages[0];
                                 }
-                                else if (20 <= wizardLevel && wizardLevel <= 29)
+                                else if (20 <= points && points <= 29)
                                 {
                                     wizardTitle = wizardTitles[1];
                                     titleMsg = titleMessages[1];
                                 }
-                                else if (30 <= wizardLevel && wizardLevel <= 34)
+                                else if (30 <= points && points <= 34)
                                 {
                                     wizardTitle = wizardTitles[2];
                                     titleMsg = titleMessages[2];
                                 }
-                                else if (35 <= wizardLevel && wizardLevel <= 39)
+                                else if (35 <= points && points <= 39)
                                 {
                                     wizardTitle = wizardTitles[3];
                                     titleMsg = titleMessages[3];
@@ -487,7 +593,7 @@ namespace CodeQuest
 
                         case 2:
                             if (existingWizard) {
-                                wizardLive = wizardLevel;
+                                wizardLive = wizardLevel * 5;
 
                                 int mNum = random.Next(0, monsterNames.GetLength(0));
                                 string mName = monsterNames[mNum];
@@ -532,14 +638,29 @@ namespace CodeQuest
                                 {
                                     Console.ForegroundColor = ConsoleColor.Cyan;
                                     Console.WriteLine(MonsterDefeeted, mLI);
-                                    wizardLevel += mLI;
-
+                                    points += mLI;
+                                    if (points <= 50) wizardLevel = points / 10;
+                                    else
+                                    {
+                                        wizardLevel = 5;
+                                        points = 50;
+                                    }
                                 }
                                 else
                                 {
                                     Console.ForegroundColor = ConsoleColor.DarkRed;
                                     Console.WriteLine(MonsterWins, mLI);
-                                    wizardLevel -= mLI;
+                                    points -= mLI;
+                                    if (points <= 0)
+                                    { 
+                                        points = 1;
+                                    }
+                                    else if (points < 10) wizardLevel = 1;
+                                    else
+                                    {
+                                        points -= mLI;
+                                        wizardLevel = points / 10;
+                                    }
                                 }
                                 Console.ForegroundColor = ConsoleColor.Yellow;
                                 Console.WriteLine(PressToContinue);
@@ -593,13 +714,13 @@ namespace CodeQuest
                                         Console.ForegroundColor = ConsoleColor.Green;
                                         Console.Write(YcordsAsk);
                                         Console.ForegroundColor = ConsoleColor.Gray;
-                                    } while (false == Int32.TryParse(Console.ReadLine(), out yCords) || yCords > excavatedMap.GetLength(0));
+                                    } while (false == Int32.TryParse(Console.ReadLine(), out yCords) || yCords >= excavatedMap.GetLength(0));
                                     do
                                     {
                                         Console.ForegroundColor = ConsoleColor.Green;
                                         Console.Write(XcordsAsk);
                                         Console.ForegroundColor = ConsoleColor.Gray;
-                                    } while (false == Int32.TryParse(Console.ReadLine(), out xCords) || xCords > excavatedMap.GetLength(1));
+                                    } while (false == Int32.TryParse(Console.ReadLine(), out xCords) || xCords >= excavatedMap.GetLength(0));
 
                                     Console.ForegroundColor = ConsoleColor.Yellow;
                                     if (!excavatedMap[yCords, xCords])
@@ -692,7 +813,7 @@ namespace CodeQuest
                                         Console.ForegroundColor = ConsoleColor.Gray;
                                     } while (false == Int32.TryParse(Console.ReadLine(), out optionChosen));
                                     Console.ForegroundColor = ConsoleColor.Green;
-                                    if (optionChosen > 0 && optionChosen - 1 < itemAmountInPropiety.GetLength(0))
+                                    if (optionChosen > 0 && optionChosen - 1 < itemAmountInPropiety.GetLength(0) && wizardLevel >= minLevelToBuy[optionChosen - 1])
                                     {
                                         int subMenuOptionSelector;
                                         Console.Write(ItemOptions);
@@ -737,7 +858,7 @@ namespace CodeQuest
                             {
                                 Console.BackgroundColor = ConsoleColor.White;
                                 Console.Clear();
-                                Console.WriteLine(WizardAttacksListTitle, wizardName, wizardLevel);
+                                Console.WriteLine(WizardAttacksListTitle, wizardName, wizardTitle, wizardLevel, points, bits);
                                 for (int i = 0; i < wizardAttacks.GetLength(0); i++)
                                 {
                                     if (levelToUnlockAttack[i] <= wizardLevel)
@@ -757,9 +878,86 @@ namespace CodeQuest
                             break;
 
                         case 7:
-                            break;
+                            if (existingWizard)
+                            {
+                                int sChosen;
+                                int mChosen;
 
-                        case 8:
+                                Console.BackgroundColor = ConsoleColor.Yellow;
+                                Console.Clear();
+                                Console.ForegroundColor = ConsoleColor.Black;
+                                Console.WriteLine(SolvedScrollsTitle);
+                                for (int i = 0; i < solvedScrolls.GetLength(0); i++)
+                                {
+                                    if (scrollDecoded[i]) Console.WriteLine(OptionInTheScroll, i, solvedScrolls[i]);
+                                }
+
+                                Console.WriteLine(ScrollsMenu);
+                                for (int i = 0; i < scrolls.GetLength(0); i++)
+                                {
+                                    if (!scrollDecoded[i]) Console.WriteLine(OptionInTheScroll, i, scrolls[i]);
+                                }
+                                do
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Black;
+                                    Console.Write(ChoseScrollToDecode);
+                                    Console.ForegroundColor = ConsoleColor.Gray;
+                                } while (false == Int32.TryParse(Console.ReadLine(), out sChosen) && (sChosen < 0 || sChosen > scrolls.GetLength(0)));
+                                Console.ForegroundColor = ConsoleColor.Black;
+
+                                Console.WriteLine(DecodingMenu);
+                                for (int i = 0; i < decodingOptions.GetLength(0); i++)
+                                {
+                                    Console.WriteLine(OptionInTheScroll, i, decodingOptions[i]);
+                                }
+                                do
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Black;
+                                    Console.Write(ChoseDecodingOption);
+                                    Console.ForegroundColor = ConsoleColor.Gray;
+                                } while (false == Int32.TryParse(Console.ReadLine(), out mChosen) && (mChosen < 0 || mChosen > decodingOptions.GetLength(0)));
+                                Console.ForegroundColor = ConsoleColor.Black;
+
+                                if (sChosen == mChosen && !scrollDecoded[sChosen])
+                                {
+                                    switch (mChosen){
+                                        case 0:
+                                            scrollInfo = scrolls[sChosen].Replace(" ", string.Empty);
+                                            break;
+                                        case 1:
+                                            scrollInfo = "";
+                                            int vowelsNum = 0;
+                                            foreach (char l in scrolls[sChosen])
+                                            {
+                                                if (Vowels.Contains(l)) vowelsNum ++;
+                                            }
+                                            scrollInfo = vowelsNum.ToString();
+                                            break;
+                                        case 2:
+                                            scrollInfo = "";
+                                            foreach (char l in scrolls[sChosen])
+                                            {
+                                                if (romanNums.Contains(l) || (l == ' ' && scrollInfo[scrollInfo.Length - 1] != ' ')) scrollInfo += l;
+                                            }
+                                            break;
+                                        default:
+                                            Console.WriteLine(DecodingFailed);
+                                            break;
+                                    }
+                                    scrollDecoded[sChosen] = true;
+                                    solvedScrolls[sChosen] = scrollInfo;
+                                    Console.WriteLine(DecodingSucces, scrollInfo);
+                                }
+                                else
+                                {
+                                    Console.WriteLine(DecodingFailed);
+                                }
+
+                                Console.BackgroundColor = ConsoleColor.Black;
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+                                Console.WriteLine(PressToContinue);
+                                Console.ReadKey();
+                            }
                             break;
 
                         default:
